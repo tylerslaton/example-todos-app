@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "all": "npm run agent | npm run dev",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "agent": "cd agent/advisor && poetry run server"
   },
   "dependencies": {
     "@copilotkit/react-core": "^1.1.0",

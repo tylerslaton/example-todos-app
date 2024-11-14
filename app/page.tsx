@@ -9,8 +9,8 @@ import "@copilotkit/react-ui/styles.css";
 export default function Home() {
   return (
     <CopilotKit
-      showDevConsole={false}
-      publicApiKey="ck_pub_2dd3dbae0941c54d73536cec77f47b5a"
+      runtimeUrl="/api/copilotkit"
+      agent="advisor_agent"
     >
       <CopilotSidebar
         labels={{

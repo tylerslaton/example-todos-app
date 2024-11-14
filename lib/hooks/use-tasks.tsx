@@ -1,6 +1,6 @@
-import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import { useCoAgent } from "@copilotkit/react-core";
 import { useCopilotChatSuggestions } from "@copilotkit/react-ui";
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
 
 export type Task = {
   id: number;
@@ -53,92 +53,37 @@ type TasksContextType = {
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
 
 export const TasksProvider = ({ children }: { children: ReactNode }) => {
-  const [tasks, setTasks] = useState<Task[]>(defaultTasks);
+  const { state, setState } = useCoAgent<{ todos: Task[] }>({
+    name: "advisor_agent",
+    initialState: {
+      todos: defaultTasks,
+    },
+  });
 
   useCopilotChatSuggestions({
-    instructions: `Offer the user one suggestion: "What can you do?". Todos state: \n ${JSON.stringify(tasks)}`,
+    instructions: `Offer the user one suggestion: "What can you do?". Todos state: \n ${JSON.stringify(state.todos)}`,
     minSuggestions: 1,
     maxSuggestions: 1,
-  }, [tasks]);
-
-  useCopilotReadable({
-    description: "The state of the todo list",
-    value: JSON.stringify(tasks),
-  });
-
-  useCopilotAction({
-    name: "addTask",
-    description: "Adds a task to the todo list",
-    parameters: [
-      {
-        name: "title",
-        type: "string",
-        description: "The title of the task",
-        required: true,
-      },
-    ],
-    handler: ({ title }) => {
-      addTask(title);
-    }
-  });
-
-  useCopilotAction({
-    name: "deleteTask",
-    description: "Deletes a task from the todo list",
-    parameters: [
-      {
-        name: "id",
-        type: "number",
-        description: "The id of the task",
-        required: true,
-      },
-    ],
-    handler: ({ id }) => {
-      deleteTask(id);
-    }
-  });
-
-  useCopilotAction({
-    name: "setTaskStatus",
-    description: "Sets the status of a task",
-    parameters: [
-      {
-        name: "id",
-        type: "number",
-        description: "The id of the task",
-        required: true,
-      },
-      {
-        name: "status",
-        type: "string",
-        description: "The status of the task",
-        enum: Object.values(TaskStatus),
-        required: true,
-      },
-    ],
-    handler: ({ id, status }) => {
-      setTaskStatus(id, status);
-    }
-  });
+  }, [state.todos]);
 
   const addTask = (title: string) => {
-    setTasks([...tasks, { id: nextId++, title, status: TaskStatus.todo }]);
+    setState({ todos: [...state.todos, { id: nextId++, title, status: TaskStatus.todo }] });
   };
 
   const setTaskStatus = (id: number, status: TaskStatus) => {
-    setTasks(
-      tasks.map((task) =>
+    setState({
+      todos: state.todos.map((task) =>
         task.id === id ? { ...task, status } : task
-      )
-    );
+      ),
+    });
   };
 
   const deleteTask = (id: number) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+    setState({ todos: state.todos.filter((task) => task.id !== id) });
   };
   
   return (
-    <TasksContext.Provider value={{ tasks, addTask, setTaskStatus, deleteTask }}>
+    <TasksContext.Provider value={{ tasks: state.todos, addTask, setTaskStatus, deleteTask }}>
       {children}
     </TasksContext.Provider>
   );
